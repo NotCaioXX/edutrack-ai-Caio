@@ -54,4 +54,3 @@ table academic_tasks {
   ]
   guid = "AIf_Roi9Z31NHsxlc9HQ7hSFNyQ"
 }
-

@@ -48,17 +48,8 @@ query "auth/login" verb=POST {
       expiration = 86400
       id = $user.id
     } as $authToken
-  
-    // Create an event log for login
-    function.run "Getting Started Template/create_event_log" {
-      input = {
-        user_id   : $user.id
-        account_id: $user.account_id
-        action    : "login"
-        metadata  : $user
-      }
-    } as $event_log
   }
+
 
   response = {authToken: $authToken, user_id: $user.id}
   tags = ["xano:quick-start"]

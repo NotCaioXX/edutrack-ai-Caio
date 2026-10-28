@@ -21,7 +21,9 @@ table subjects {
     }
   
     // Data e hora de criação do registro
-    timestamp created_at?=now
+    timestamp created_at?=now {
+      visibility = "private"
+    }
   }
 
   index = [
