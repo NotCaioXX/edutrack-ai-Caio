@@ -4,12 +4,12 @@ query usuario verb=POST {
 
   input {
     dblink {
-      table = "usuario"
+      table = ""
     }
   }
 
   stack {
-    db.add usuario {
+    db.add "" {
       enforce_hidden_fields = false
       data = {created_at: "now"}
     } as $usuario

@@ -7,7 +7,7 @@ query "usuario/{usuario_id}" verb=GET {
   }
 
   stack {
-    db.get usuario {
+    db.get "" {
       field_name = "id"
       field_value = $input.usuario_id
     } as $usuario

@@ -5,7 +5,7 @@ query "usuario/{usuario_id}" verb=PATCH {
   input {
     int usuario_id? filters=min:1
     dblink {
-      table = "usuario"
+      table = ""
     }
   }
 
@@ -15,7 +15,7 @@ query "usuario/{usuario_id}" verb=PATCH {
       exclude_middleware = false
     } as $raw_input
   
-    db.patch usuario {
+    db.patch "" {
       field_name = "id"
       field_value = $input.usuario_id
       data = `$input|pick:($raw_input|keys)`|filter_null|filter_empty_text

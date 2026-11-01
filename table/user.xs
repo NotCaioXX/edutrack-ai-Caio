@@ -16,7 +16,7 @@ table user {
   
     // Reference to the company the user belongs to.
     int account_id? {
-      table = "account"
+      table = ""
     }
   
     // The role of the user within their company (e.g., 'admin', 'member').

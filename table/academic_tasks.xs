@@ -4,47 +4,42 @@ table academic_tasks {
 
   schema {
     // Unique identifier for the task
-    int id {
-      description = "Unique identifier for the task"
-    }
-
+    // Unique identifier for the task
+    int id
+  
+    // Creation timestamp
     // Creation timestamp
     timestamp created_at?=now {
       visibility = "private"
-      description = "Creation timestamp"
     }
-
+  
     // Reference to the authenticated user / student
+    // ID of the student who owns the task
     int user_id {
       table = "user"
-      description = "ID of the student who owns the task"
     }
-
+  
     // Reference to the academic subject
+    // ID of the subject this task belongs to
     int subject_id {
       table = "subjects"
-      description = "ID of the subject this task belongs to"
     }
-
+  
     // Title / headline of the task
-    text title filters=trim {
-      description = "Title of the task"
-    }
-
+    // Title of the task
+    text title filters=trim
+  
     // Detailed description or instructions for the task
-    text description? filters=trim {
-      description = "Detailed task description"
-    }
-
+    // Detailed task description
+    text description? filters=trim
+  
     // Target completion or deadline date
-    date due_date? {
-      description = "Due date for the task"
-    }
-
+    // Due date for the task
+    date due_date?
+  
     // Current lifecycle status (e.g., pending, in_progress, completed)
-    text status?="pending" filters=trim {
-      description = "Task status"
-    }
+    // Task status
+    text status?=pending filters=trim
   }
 
   index = [
@@ -52,6 +47,6 @@ table academic_tasks {
     {type: "btree", field: [{name: "user_id"}]}
     {type: "btree", field: [{name: "subject_id"}]}
   ]
+
   guid = "AIf_Roi9Z31NHsxlc9HQ7hSFNyQ"
 }
-

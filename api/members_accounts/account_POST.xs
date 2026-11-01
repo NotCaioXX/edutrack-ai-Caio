@@ -16,7 +16,7 @@ query account verb=POST {
 
   stack {
     // Create a new account record in the database.
-    db.add account {
+    db.add "" {
       enforce_hidden_fields = false
       data = {
         name       : $input.name

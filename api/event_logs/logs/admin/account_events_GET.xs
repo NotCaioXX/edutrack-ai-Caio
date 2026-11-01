@@ -20,7 +20,7 @@ query "logs/admin/account_events" verb=GET {
     }
   
     // Retrieve all events for the specified account.
-    db.query event_log {
+    db.query "" {
       where = $db.event_log.account_id == $user.account_id
       sort = {event_log.created_at: "desc"}
       return = {type: "list"}
