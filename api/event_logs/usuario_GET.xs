@@ -6,7 +6,7 @@ query usuario verb=GET {
   }
 
   stack {
-    db.query usuario {
+    db.query "" {
       return = {type: "list"}
     } as $usuario
   }

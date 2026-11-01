@@ -9,7 +9,7 @@ query "account/details" verb=GET {
 
   stack {
     // Retrieve account details based on account ID
-    db.get account {
+    db.get "" {
       field_name = "id"
       field_value = $input.account_id
     } as $account_details

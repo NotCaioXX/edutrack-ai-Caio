@@ -8,7 +8,7 @@ query "logs/user/my_events" verb=GET {
 
   stack {
     // Retrieve event logs for the authenticated user
-    db.query event_log {
+    db.query "" {
       where = $db.event_log.user_id == $auth.id
       return = {type: "list"}
     } as $user_events

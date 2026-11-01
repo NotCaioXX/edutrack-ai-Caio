@@ -22,7 +22,7 @@ query "user/join_account" verb=POST {
     }
   
     // Retrieve the account record to ensure it exists.
-    db.get account {
+    db.get "" {
       field_name = "id"
       field_value = $input.account_id
     } as $account

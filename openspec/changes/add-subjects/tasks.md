@@ -7,9 +7,9 @@
 
 ## 2. Backend API Endpoints
 
-- [ ] 2.1 Implement `GET /subjects` endpoint to retrieve subjects belonging to the authenticated user and verify response payload structure
-- [ ] 2.2 Implement `POST /subjects` endpoint with input validation ensuring subject name is required, verifying successful record creation
-- [ ] 2.3 Implement `PATCH /subjects/{id}` and `DELETE /subjects/{id}` endpoints to support subject updates and deletions, verifying ownership checks
+- [x] 2.1 Implement `GET /subjects` endpoint to retrieve subjects belonging to the authenticated user and verify response payload structure
+- [x] 2.2 Implement `POST /subjects` endpoint with input validation ensuring subject name is required, verifying successful record creation
+- [x] 2.3 Implement `PATCH /subjects/{id}` and `DELETE /subjects/{id}` endpoints to support subject updates and deletions, verifying ownership checks
 
 ## 3. Frontend Integration (Streamlit)
 
@@ -19,4 +19,5 @@
 
 ## 4. Verification
 
-- [ ] 4.1 Run Streamlit application locally and verify creating, listing, and counting academic subjects end-to-end
+- [x] 4.1 Run Streamlit application locally and verify creating, listing, and counting academic subjects end-to-end
+
