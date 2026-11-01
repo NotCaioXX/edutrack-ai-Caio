@@ -34,3 +34,18 @@ The system SHALL provide authenticated endpoints to create, list, retrieve, upda
 #### Scenario: Create task linked to subject and user
 - **WHEN** an authenticated user creates a task via `POST /academic_tasks`
 - **THEN** the system records the task with `user_id` mapped to the authenticated user and links it to the specified `subject_id`
+
+### Requirement: Streamlit Subject and Task Persistence in Xano
+The system SHALL synchronize subjects and academic tasks in the Streamlit frontend directly with the Xano API endpoints, ensuring data is saved to and retrieved from Xano under the authenticated user session.
+
+#### Scenario: User views and manages subjects in Streamlit
+- **WHEN** an authenticated user opens the Disciplinas page in Streamlit
+- **THEN** the application queries `GET /subjects` from Xano with the user auth token and renders the saved records
+
+#### Scenario: User saves a new subject in Streamlit
+- **WHEN** an authenticated user submits the new subject form
+- **THEN** the application sends a `POST /subjects` request to Xano and updates the display upon success
+
+#### Scenario: User views and creates tasks in Streamlit
+- **WHEN** an authenticated user opens or submits a new task in the Tarefas page
+- **THEN** the application communicates with `GET /academic_tasks` and `POST /academic_tasks` on Xano to persist and fetch tasks for that user
