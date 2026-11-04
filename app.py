@@ -90,5 +90,6 @@ st.markdown("""
 Utilize a barra lateral para navegar pelo aplicativo:
 - 📚 **Disciplinas**: Cadastre matérias com professor e carga horária (sincronizado com `tables/subjects.xs`).
 - 📝 **Tarefas**: Gerencie lições, provas e entregas vinculadas a cada disciplina (sincronizado com `tables/academic_tasks.xs`).
+- 📊 **Progresso**: Acompanhe o percentual de conclusão das disciplinas e baixe o relatório de desempenho em PDF.
 - 👤 **Perfil**: Faça cadastro ou login na plataforma utilizando os endpoints de autenticação do Xano.
 """)
