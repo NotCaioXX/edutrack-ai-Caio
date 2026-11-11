@@ -55,18 +55,28 @@ def calculate_progress_metrics(
         "progress_percentage": percentage
     }
 
+def get_config(key: str, default: str = "") -> str:
+    """Retrieves configuration from st.secrets if running in Streamlit, otherwise os.environ/env."""
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and key in st.secrets:
+            return str(st.secrets[key]).rstrip("/")
+    except Exception:
+        pass
+    load_env()
+    return os.environ.get(key, default).rstrip("/")
+
 def get_auth_headers(token: Optional[str] = None) -> Dict[str, str]:
     """Constructs authorization headers using passed token or environment variables."""
-    auth_token = token or os.environ.get("EDUTRACK_AUTH_TOKEN") or os.environ.get("XANO_AUTH_TOKEN")
+    auth_token = token or get_config("EDUTRACK_AUTH_TOKEN") or get_config("XANO_AUTH_TOKEN")
     return {"Authorization": f"Bearer {auth_token}"} if auth_token else {}
 
 def fetch_subjects(token: Optional[str] = None) -> List[Dict[str, Any]]:
     """Retrieves subjects from GET /subjects CRUD endpoint."""
-    load_env()
     base_url = (
-        os.environ.get("XANO_SUBJECTS_BASE_URL")
-        or os.environ.get("XANO_API_BASE_URL")
-        or os.environ.get("XANO_AUTH_BASE_URL", "")
+        get_config("XANO_SUBJECTS_BASE_URL")
+        or get_config("XANO_API_BASE_URL")
+        or get_config("XANO_AUTH_BASE_URL", "")
     ).rstrip("/")
     if not base_url:
         return []
@@ -81,11 +91,10 @@ def fetch_subjects(token: Optional[str] = None) -> List[Dict[str, Any]]:
 
 def fetch_tasks(token: Optional[str] = None) -> List[Dict[str, Any]]:
     """Retrieves academic tasks from GET /academic_tasks CRUD endpoint."""
-    load_env()
     base_url = (
-        os.environ.get("XANO_TASKS_BASE_URL")
-        or os.environ.get("XANO_API_BASE_URL")
-        or os.environ.get("XANO_AUTH_BASE_URL", "")
+        get_config("XANO_TASKS_BASE_URL")
+        or get_config("XANO_API_BASE_URL")
+        or get_config("XANO_AUTH_BASE_URL", "")
     ).rstrip("/")
     if not base_url:
         return []
