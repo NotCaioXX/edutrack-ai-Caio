@@ -17,6 +17,7 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.calculate_progress import (
     load_env,
+    get_config,
     get_auth_headers,
     calculate_all_progress,
     fetch_subjects,
@@ -182,11 +183,10 @@ def build_pdf_document(
 
 def fetch_report_data_from_endpoint(token: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Retrieves consolidated report data directly from GET /reports/performance_pdf if available."""
-    load_env()
     base_url = (
-        os.environ.get("XANO_REPORTS_BASE_URL")
-        or os.environ.get("XANO_API_BASE_URL")
-        or os.environ.get("XANO_AUTH_BASE_URL", "")
+        get_config("XANO_REPORTS_BASE_URL")
+        or get_config("XANO_API_BASE_URL")
+        or get_config("XANO_AUTH_BASE_URL", "")
     ).rstrip("/")
     if not base_url:
         return None

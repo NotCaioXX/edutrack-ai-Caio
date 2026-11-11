@@ -6,7 +6,7 @@ import requests
 st.set_page_config(page_title="Perfil & Autenticação", page_icon="👤")
 
 def load_env():
-    """Carrega as variáveis do arquivo .env localizado na raiz do projeto."""
+    """Carrega as variáveis do arquivo .env localizado na raiz do projeto como fallback."""
     env_path = Path(__file__).resolve().parent.parent / ".env"
     if env_path.exists():
         with open(env_path, "r", encoding="utf-8") as f:
@@ -19,8 +19,17 @@ def load_env():
                     if key:
                         os.environ[key] = val
 
+def get_config(key: str, default: str = "") -> str:
+    """Obtém configuração prioritariamente de st.secrets, com fallback para os.environ."""
+    try:
+        if key in st.secrets:
+            return str(st.secrets[key]).rstrip("/")
+    except Exception:
+        pass
+    return os.environ.get(key, default).rstrip("/")
+
 load_env()
-BASE_URL = os.environ.get("XANO_AUTH_BASE_URL", "").rstrip("/")
+BASE_URL = get_config("XANO_AUTH_BASE_URL", "")
 
 # Inicialização do estado da sessão
 if "auth_token" not in st.session_state:

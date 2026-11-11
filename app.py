@@ -6,7 +6,7 @@ import requests
 st.set_page_config(page_title="EduTrack AI", page_icon="🎓", layout="wide")
 
 def load_env():
-    """Carrega as variáveis do arquivo .env localizado na raiz do projeto."""
+    """Carrega as variáveis do arquivo .env localizado na raiz do projeto como fallback."""
     env_path = Path(__file__).resolve().parent / ".env"
     if env_path.exists():
         with open(env_path, "r", encoding="utf-8") as f:
@@ -19,9 +19,18 @@ def load_env():
                     if key:
                         os.environ[key] = val
 
+def get_config(key: str, default: str = "") -> str:
+    """Obtém configuração prioritariamente de st.secrets, com fallback para os.environ."""
+    try:
+        if key in st.secrets:
+            return str(st.secrets[key]).rstrip("/")
+    except Exception:
+        pass
+    return os.environ.get(key, default).rstrip("/")
+
 load_env()
-SUBJECTS_URL = (os.environ.get("XANO_SUBJECTS_BASE_URL") or os.environ.get("XANO_API_BASE_URL") or os.environ.get("XANO_AUTH_BASE_URL", "")).rstrip("/")
-TASKS_URL = (os.environ.get("XANO_TASKS_BASE_URL") or os.environ.get("XANO_API_BASE_URL") or os.environ.get("XANO_AUTH_BASE_URL", "")).rstrip("/")
+SUBJECTS_URL = (get_config("XANO_SUBJECTS_BASE_URL") or get_config("XANO_API_BASE_URL") or get_config("XANO_AUTH_BASE_URL", "")).rstrip("/")
+TASKS_URL = (get_config("XANO_TASKS_BASE_URL") or get_config("XANO_API_BASE_URL") or get_config("XANO_AUTH_BASE_URL", "")).rstrip("/")
 
 # Inicialização de variáveis de sessão
 if "auth_token" not in st.session_state:
