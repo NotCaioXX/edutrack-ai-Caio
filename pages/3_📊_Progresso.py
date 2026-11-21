@@ -13,8 +13,15 @@ from scripts.calculate_progress import (
     calculate_all_progress
 )
 from scripts.generate_pdf_report import generate_performance_pdf
+from components.navbar import render_navbar, render_page_header
 
-st.set_page_config(page_title="Progresso & Desempenho", page_icon="📊", layout="wide")
+page_icon_path = PROJECT_ROOT / "assets" / "logos" / "prog_00000.png"
+st.set_page_config(
+    page_title="Progresso & Desempenho",
+    page_icon=str(page_icon_path) if page_icon_path.exists() else None,
+    layout="wide"
+)
+render_navbar()
 
 load_env()
 
@@ -31,15 +38,15 @@ if "cached_tasks" not in st.session_state:
 token = st.session_state.get("auth_token")
 user = st.session_state.get("user_info")
 
-st.title("📊 Progresso Acadêmico & Relatório")
+render_page_header("Progresso Acadêmico & Relatório", "prog_00000.png")
 
 # Barra de status do usuário
 if user and token:
-    st.caption(f"👤 Estudante: **{user.get('name', 'Estudante')}** ({user.get('email', '')}) — Dados sincronizados com Xano")
+    st.caption(f"Estudante: **{user.get('name', 'Estudante')}** ({user.get('email', '')}) — Dados sincronizados com Xano")
 elif token:
-    st.caption("🔑 Sessão ativa com Xano.")
+    st.caption("Sessão ativa com Xano.")
 else:
-    st.info("💡 **Dica:** Acesse a página **👤 Perfil** para fazer login e calcular o progresso das disciplinas salvas na sua conta do Xano.")
+    st.info("**Dica:** Acesse a página **Perfil** para fazer login e calcular o progresso das disciplinas salvas na sua conta do Xano.")
 
 st.markdown("---")
 
@@ -69,13 +76,30 @@ total_concluidas = sum(item.get("completed_tasks", 0) for item in progress_data)
 total_pendentes = sum(item.get("pending_tasks", 0) for item in progress_data)
 progresso_geral = round((total_concluidas / total_tarefas * 100), 2) if total_tarefas > 0 else 0.0
 
+# Cálculo consolidado da média geral das notas
+tasks_source = st.session_state.get("cached_tasks", [])
+all_valid_grades = [
+    float(t["grade"]) for t in tasks_source
+    if t.get("grade") is not None and str(t.get("grade")).strip() != ""
+]
+# Fallback caso venha de progress_data com graded_tasks
+if not all_valid_grades:
+    for item in progress_data:
+        avg_g = item.get("average_grade")
+        g_count = item.get("graded_tasks", 0)
+        if avg_g is not None and g_count > 0:
+            all_valid_grades.extend([float(avg_g)] * g_count)
+
+media_geral_str = f"{round(sum(all_valid_grades) / len(all_valid_grades), 1)}" if all_valid_grades else "Sem notas"
+
 # 1. Resumo Executivo (Cards de Métricas)
-st.subheader("📈 Resumo de Desempenho")
-c1, c2, c3, c4 = st.columns(4)
+st.subheader("Resumo de Desempenho")
+c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Disciplinas Ativas", total_disciplinas)
 c2.metric("Total de Tarefas", total_tarefas)
 c3.metric("Tarefas Concluídas", total_concluidas)
-c4.metric("Progresso Geral", f"{progresso_geral}%")
+c4.metric("Média Geral", media_geral_str)
+c5.metric("Progresso Geral", f"{progresso_geral}%")
 
 # Barra visual de progresso geral
 progresso_frac = min(max(progresso_geral / 100.0, 0.0), 1.0)
@@ -84,7 +108,7 @@ st.progress(progresso_frac, text=f"Taxa de Conclusão Global: {progresso_geral}%
 st.markdown("---")
 
 # 2. Seção de Download do Relatório em PDF (usando scripts/generate_pdf_report.py)
-st.subheader("📑 Relatório Oficial em PDF")
+st.subheader("Relatório Oficial em PDF")
 col_pdf_info, col_pdf_btn = st.columns([3, 1])
 
 with col_pdf_info:
@@ -111,7 +135,7 @@ with col_pdf_btn:
             pdf_bytes = pdf_file.read()
 
         st.download_button(
-            label="📥 Baixar Relatório (PDF)",
+            label="Baixar Relatório (PDF)",
             data=pdf_bytes,
             file_name=f"relatorio_desempenho_{nome_aluno.replace(' ', '_').lower()}.pdf",
             mime="application/pdf",
@@ -123,10 +147,10 @@ with col_pdf_btn:
 st.markdown("---")
 
 # 3. Detalhamento por Disciplina
-st.subheader("📚 Progresso Detalhado por Disciplina")
+st.subheader("Progresso Detalhado por Disciplina")
 
 if not progress_data:
-    st.info("Nenhuma disciplina encontrada. Acesse a aba **📚 Disciplinas** para cadastrar matérias e **📝 Tarefas** para cadastrar obrigações.")
+    st.info("Nenhuma disciplina encontrada. Acesse a aba **Disciplinas** para cadastrar matérias e **Tarefas** para cadastrar obrigações.")
 else:
     for item in progress_data:
         s_id = item.get("subject_id")
@@ -139,26 +163,30 @@ else:
         with st.container():
             c_header1, c_header2 = st.columns([3, 1])
             with c_header1:
-                st.markdown(f"#### 📖 {s_name}")
+                st.markdown(f"#### {s_name}")
             with c_header2:
                 if s_total == 0:
-                    st.caption("ℹ️ Nenhuma tarefa associada")
+                    st.caption("Nenhuma tarefa associada")
                 elif s_pct == 100.0:
-                    st.success(f"✅ {s_pct}% Concluída")
+                    st.success(f"{s_pct}% Concluída")
                 elif s_pct > 0.0:
-                    st.info(f"⏳ {s_pct}% Concluída")
+                    st.info(f"{s_pct}% Concluída")
                 else:
-                    st.warning(f"📌 {s_pct}% Concluída")
+                    st.warning(f"{s_pct}% Concluída")
 
             # Barra de progresso da disciplina
             pct_frac = min(max(s_pct / 100.0, 0.0), 1.0)
             st.progress(pct_frac)
 
             # Métricas em colunas
-            m1, m2, m3 = st.columns(3)
-            m1.write(f"📝 **Total de Tarefas:** {s_total}")
-            m2.write(f"✅ **Concluídas:** {s_comp}")
-            m3.write(f"⏳ **Pendentes:** {s_pend}")
+            m1, m2, m3, m4 = st.columns(4)
+            m1.write(f"**Total de Tarefas:** {s_total}")
+            m2.write(f"**Concluídas:** {s_comp}")
+            m3.write(f"**Pendentes:** {s_pend}")
+            
+            s_grade = item.get("average_grade")
+            s_grade_str = f"{float(s_grade):.1f}" if s_grade is not None else "Sem notas"
+            m4.write(f"**Média de Notas:** {s_grade_str}")
 
             st.divider()
 

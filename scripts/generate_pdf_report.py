@@ -89,15 +89,33 @@ def build_pdf_document(
     total_pending = sum(item.get("pending_tasks", 0) for item in progress_data)
     overall_percentage = round((total_completed / total_tasks * 100), 2) if total_tasks > 0 else 0.0
 
+    # Calculate overall average grade from progress_data
+    graded_items = [
+        item for item in progress_data
+        if item.get("average_grade") is not None and item.get("graded_tasks", 0) > 0
+    ]
+    total_graded_tasks = sum(item.get("graded_tasks", 0) for item in graded_items)
+    if total_graded_tasks > 0:
+        total_grade_sum = sum(item["average_grade"] * item.get("graded_tasks", 0) for item in graded_items)
+        overall_avg_val = round(total_grade_sum / total_graded_tasks, 1)
+        overall_avg_str = f"{overall_avg_val:.1f}"
+    else:
+        # Fallback if average_grade is provided directly without graded_tasks
+        simple_grades = [item["average_grade"] for item in progress_data if item.get("average_grade") is not None]
+        if simple_grades:
+            overall_avg_str = f"{(sum(simple_grades) / len(simple_grades)):.1f}"
+        else:
+            overall_avg_str = "-"
+
     # Summary Metrics Cards
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(15, 23, 42)
     pdf.cell(0, 7, "Resumo Executivo", ln=True)
 
-    # 4 metric boxes
-    box_w = 45
+    # 5 metric boxes
+    box_w = 36
     box_h = 18
-    gap = 3.3
+    gap = 2.5
     start_x = 10
     start_y = pdf.get_y()
 
@@ -105,6 +123,7 @@ def build_pdf_document(
         ("Disciplinas", str(total_subjects), (241, 245, 249)),
         ("Total Tarefas", str(total_tasks), (241, 245, 249)),
         ("Concluidas", str(total_completed), (220, 252, 231)),  # Light green
+        ("Media Geral", overall_avg_str, (254, 243, 199)),     # Light amber
         ("Progresso Geral", f"{overall_percentage}%", (219, 234, 254))  # Light blue
     ]
 
@@ -136,11 +155,12 @@ def build_pdf_document(
 
     # Table Header
     cols = [
-        ("Disciplina", 80),
+        ("Disciplina", 65),
         ("Total Tarefas", 25),
         ("Concluidas", 25),
         ("Pendentes", 25),
-        ("Progresso", 35)
+        ("Media", 25),
+        ("Progresso", 25)
     ]
 
     pdf.set_fill_color(51, 65, 85)
@@ -163,16 +183,18 @@ def build_pdf_document(
             tasks_tot = str(item.get("total_tasks", 0))
             tasks_comp = str(item.get("completed_tasks", 0))
             tasks_pend = str(item.get("pending_tasks", 0))
+            avg_grade = f"{item['average_grade']:.1f}" if item.get("average_grade") is not None else "-"
             prog_str = f"{item.get('progress_percentage', 0.0)}%"
 
             fill_row = (idx % 2 == 1)
             pdf.set_fill_color(248, 250, 252) if fill_row else pdf.set_fill_color(255, 255, 255)
 
-            pdf.cell(80, 7, f" {subj_name[:38]}", border=1, align="L", fill=True)
+            pdf.cell(65, 7, f" {subj_name[:30]}", border=1, align="L", fill=True)
             pdf.cell(25, 7, tasks_tot, border=1, align="C", fill=True)
             pdf.cell(25, 7, tasks_comp, border=1, align="C", fill=True)
             pdf.cell(25, 7, tasks_pend, border=1, align="C", fill=True)
-            pdf.cell(35, 7, prog_str, border=1, align="C", fill=True)
+            pdf.cell(25, 7, avg_grade, border=1, align="C", fill=True)
+            pdf.cell(25, 7, prog_str, border=1, align="C", fill=True)
             pdf.ln()
 
     # Save to file

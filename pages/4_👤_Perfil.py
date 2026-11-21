@@ -1,9 +1,23 @@
 import os
+import sys
 from pathlib import Path
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="Perfil & Autenticação", page_icon="👤")
+# Setup project path for components import
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from components.navbar import render_navbar
+
+page_icon_path = PROJECT_ROOT / "assets" / "logos" / "perfil_00000.png"
+st.set_page_config(
+    page_title="Perfil & Autenticação",
+    page_icon=str(page_icon_path) if page_icon_path.exists() else None,
+    layout="wide"
+)
+render_navbar()
 
 def load_env():
     """Carrega as variáveis do arquivo .env localizado na raiz do projeto como fallback."""
@@ -58,10 +72,10 @@ def fetch_user_profile():
         st.error(f"Erro ao conectar com o servidor: {e}")
     return None
 
-st.title("👤 Perfil do Usuário")
+st.title("Perfil do Usuário")
 
 if not BASE_URL:
-    st.warning("⚠️ A variável `XANO_AUTH_BASE_URL` não foi configurada no arquivo `.env`.")
+    st.warning("A variável `XANO_AUTH_BASE_URL` não foi configurada no arquivo `.env`.")
     st.info("Adicione a URL base dos endpoints no formato: `XANO_AUTH_BASE_URL=https://<instancia>.xano.io/api:6cQL_hM3` no arquivo `.env`.")
 
 # Exibição quando usuário já está autenticado
@@ -74,7 +88,7 @@ if st.session_state.get("auth_token"):
         st.success(f"Olá, **{user.get('name', 'Estudante')}**! Você está conectado.")
         
         st.markdown("---")
-        st.subheader("📋 Dados da Conta")
+        st.subheader("Dados da Conta")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -85,7 +99,7 @@ if st.session_state.get("auth_token"):
             st.write(f"**ID do Usuário:** {user.get('id', '-')}")
 
         st.markdown("---")
-        if st.button("🚪 Sair (Logout)", type="secondary"):
+        if st.button("Sair (Logout)", type="secondary"):
             st.session_state["auth_token"] = None
             st.session_state["user_info"] = None
             st.success("Você saiu da sua conta.")
@@ -98,7 +112,7 @@ if st.session_state.get("auth_token"):
 
 else:
     # Abas para alternar entre Login e Cadastro
-    tab_login, tab_signup = st.tabs(["🔑 Entrar (Login)", "📝 Cadastrar-se (Cadastro)"])
+    tab_login, tab_signup = st.tabs(["Entrar (Login)", "Cadastrar-se (Cadastro)"])
 
     with tab_login:
         st.subheader("Acesse sua Conta")
