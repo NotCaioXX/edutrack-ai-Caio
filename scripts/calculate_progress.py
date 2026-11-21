@@ -46,13 +46,23 @@ def calculate_progress_metrics(
     pending = total - completed
     percentage = round((completed / total) * 100, 2) if total > 0 else 0.0
 
+    # Calculate average grade from tasks with valid numeric grades
+    valid_grades = [
+        float(t["grade"]) for t in filtered 
+        if t.get("grade") is not None and str(t.get("grade")).strip() != ""
+    ]
+    average_grade = round(sum(valid_grades) / len(valid_grades), 2) if valid_grades else None
+    graded_tasks = len(valid_grades)
+
     return {
         "subject_id": subject_id,
         "subject_name": subject_name,
         "total_tasks": total,
         "completed_tasks": completed,
         "pending_tasks": pending,
-        "progress_percentage": percentage
+        "progress_percentage": percentage,
+        "average_grade": average_grade,
+        "graded_tasks": graded_tasks
     }
 
 def get_config(key: str, default: str = "") -> str:

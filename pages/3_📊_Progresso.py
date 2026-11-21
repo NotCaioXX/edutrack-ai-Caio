@@ -76,13 +76,30 @@ total_concluidas = sum(item.get("completed_tasks", 0) for item in progress_data)
 total_pendentes = sum(item.get("pending_tasks", 0) for item in progress_data)
 progresso_geral = round((total_concluidas / total_tarefas * 100), 2) if total_tarefas > 0 else 0.0
 
+# Cálculo consolidado da média geral das notas
+tasks_source = st.session_state.get("cached_tasks", [])
+all_valid_grades = [
+    float(t["grade"]) for t in tasks_source
+    if t.get("grade") is not None and str(t.get("grade")).strip() != ""
+]
+# Fallback caso venha de progress_data com graded_tasks
+if not all_valid_grades:
+    for item in progress_data:
+        avg_g = item.get("average_grade")
+        g_count = item.get("graded_tasks", 0)
+        if avg_g is not None and g_count > 0:
+            all_valid_grades.extend([float(avg_g)] * g_count)
+
+media_geral_str = f"{round(sum(all_valid_grades) / len(all_valid_grades), 1)}" if all_valid_grades else "Sem notas"
+
 # 1. Resumo Executivo (Cards de Métricas)
 st.subheader("Resumo de Desempenho")
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Disciplinas Ativas", total_disciplinas)
 c2.metric("Total de Tarefas", total_tarefas)
 c3.metric("Tarefas Concluídas", total_concluidas)
-c4.metric("Progresso Geral", f"{progresso_geral}%")
+c4.metric("Média Geral", media_geral_str)
+c5.metric("Progresso Geral", f"{progresso_geral}%")
 
 # Barra visual de progresso geral
 progresso_frac = min(max(progresso_geral / 100.0, 0.0), 1.0)
@@ -162,10 +179,14 @@ else:
             st.progress(pct_frac)
 
             # Métricas em colunas
-            m1, m2, m3 = st.columns(3)
+            m1, m2, m3, m4 = st.columns(4)
             m1.write(f"**Total de Tarefas:** {s_total}")
             m2.write(f"**Concluídas:** {s_comp}")
             m3.write(f"**Pendentes:** {s_pend}")
+            
+            s_grade = item.get("average_grade")
+            s_grade_str = f"{float(s_grade):.1f}" if s_grade is not None else "Sem notas"
+            m4.write(f"**Média de Notas:** {s_grade_str}")
 
             st.divider()
 
