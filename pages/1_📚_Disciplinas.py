@@ -1,9 +1,23 @@
 import os
+import sys
 from pathlib import Path
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="Disciplinas", page_icon="📚", layout="wide")
+# Setup project path for components import
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from components.navbar import render_navbar, render_page_header
+
+page_icon_path = PROJECT_ROOT / "assets" / "logos" / "disci_00000.png"
+st.set_page_config(
+    page_title="Disciplinas",
+    page_icon=str(page_icon_path) if page_icon_path.exists() else None,
+    layout="wide"
+)
+render_navbar()
 
 def load_env():
     """Carrega as variáveis do arquivo .env localizado na raiz do projeto como fallback."""
@@ -159,17 +173,17 @@ def remove_subject(subject_id):
     return True, "Disciplina removida do cache local."
 
 # Cabeçalho da Página
-st.title("📚 Gestão de Disciplinas")
+render_page_header("Gestão de Disciplinas", "disci_00000.png")
 
 # Barra de status de conexão do usuário
 if user and token:
-    st.caption(f"👤 Usuário conectado: **{user.get('name', 'Estudante')}** ({user.get('email', '')}) — Sincronizado com Xano")
+    st.caption(f"Usuário conectado: **{user.get('name', 'Estudante')}** ({user.get('email', '')}) — Sincronizado com Xano")
 elif BASE_URL and not token:
-    st.warning("⚠️ Você não está autenticado. Acesse a página **👤 Perfil** para fazer login e persistir dados no Xano.")
+    st.warning("Você não está autenticado. Acesse a página **Perfil** para fazer login e persistir dados no Xano.")
 else:
-    st.info("💡 **Dica:** Acesse a aba **👤 Perfil** para configurar e conectar sua conta ao Xano.")
+    st.info("**Dica:** Acesse a aba **Perfil** para configurar e conectar sua conta ao Xano.")
 
-tab_lista, tab_novo = st.tabs(["📋 Minhas Disciplinas", "➕ Nova Disciplina"])
+tab_lista, tab_novo = st.tabs(["Minhas Disciplinas", "Nova Disciplina"])
 
 # Aba 1: Listagem
 with tab_lista:
@@ -183,7 +197,7 @@ with tab_lista:
     st.markdown("---")
     
     if not subjects:
-        st.info("Nenhuma disciplina cadastrada ainda. Utilize a aba **➕ Nova Disciplina** para cadastrar a sua primeira matéria.")
+        st.info("Nenhuma disciplina cadastrada ainda. Utilize a aba **Nova Disciplina** para cadastrar a sua primeira matéria.")
     else:
         for subj in subjects:
             s_id = subj.get("id")
@@ -193,11 +207,11 @@ with tab_lista:
             
             with st.container():
                 c1, c2, c3, c4 = st.columns([3, 2, 2, 1])
-                c1.markdown(f"**📖 {s_name}**")
-                c2.write(f"👨‍🏫 Prof: {s_teacher}")
-                c3.write(f"⏱️ {s_hours} horas")
+                c1.markdown(f"**{s_name}**")
+                c2.write(f"Prof: {s_teacher}")
+                c3.write(f"{s_hours} horas")
                 with c4:
-                    if st.button("🗑️", key=f"del_subj_{s_id}", help="Excluir disciplina"):
+                    if st.button("Excluir", key=f"del_subj_{s_id}", help="Excluir disciplina"):
                         ok, msg = remove_subject(s_id)
                         if ok:
                             st.toast(msg)
@@ -206,7 +220,7 @@ with tab_lista:
                             st.error(msg)
                 
                 # Expander para edição (PATCH /subjects/{id})
-                with st.expander(f"✏️ Editar {s_name}", expanded=False):
+                with st.expander(f"Editar {s_name}", expanded=False):
                     with st.form(f"form_edit_subj_{s_id}"):
                         edit_name = st.text_input("Nome da Disciplina", value=s_name)
                         edit_teacher = st.text_input("Professor", value=s_teacher if s_teacher != "Não informado" else "")
@@ -227,7 +241,7 @@ with tab_lista:
 
 # Aba 2: Cadastro
 with tab_novo:
-    st.subheader("Cadastrar Nova Disciplina na Tabela `subjects`")
+    st.subheader("Cadastrar Nova Disciplina")
     with st.form("form_disciplina"):
         nome = st.text_input("Nome da Disciplina *", placeholder="Ex: Algoritmos e Estruturas de Dados")
         professor = st.text_input("Professor / Instrutor", placeholder="Ex: Dr. Carlos Silva")

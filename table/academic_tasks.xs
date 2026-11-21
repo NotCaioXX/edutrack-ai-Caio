@@ -40,6 +40,9 @@ table academic_tasks {
     // Current lifecycle status (e.g., pending, in_progress, completed)
     // Task status
     text status?=pending filters=trim
+
+    // Grade assigned to the completed task (0.0 to 10.0)
+    decimal grade? filters=min:0|max:10
   }
 
   index = [

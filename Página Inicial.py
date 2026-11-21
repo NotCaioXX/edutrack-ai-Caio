@@ -5,7 +5,15 @@ from pathlib import Path
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="EduTrack AI", page_icon="🎓", layout="wide")
+from components.navbar import render_navbar, render_section_header
+
+page_icon_path = Path(__file__).resolve().parent / "assets" / "logos" / "logo_00000.png"
+st.set_page_config(
+    page_title="EduTrack AI",
+    page_icon=str(page_icon_path) if page_icon_path.exists() else None,
+    layout="wide"
+)
+render_navbar()
 
 def load_env():
     """Carrega as variáveis do arquivo .env localizado na raiz do projeto como fallback."""
@@ -79,27 +87,10 @@ def sync_dashboard_metrics():
 
 subj_count, pending_count = sync_dashboard_metrics()
 
-# 1. Cabeçalho com Redirecionamento para Perfil no Canto Superior Direito
-header_col1, header_col2 = st.columns([3, 1])
-
-with header_col1:
-    st.title("🎓 EduTrack AI")
-    if user:
-        st.caption(f"Bem-vindo(a), **{user.get('name', 'Estudante')}**! Conectado ao Xano.")
-    else:
-        st.caption("Visite a página **👤 Perfil** para autenticar-se e sincronizar dados com sua conta no Xano.")
-
-with header_col2:
-    st.write("")  # Espaçamento vertical para alinhar com o título
-    user_name = user.get("name", "Meu Perfil") if user else "Entrar / Perfil"
-    st.page_link("pages/3_👤_Perfil.py", label=user_name, icon="👤")
-
-st.markdown("---")
-
 # Métricas Visuais Dinâmicas
 col1, col2 = st.columns(2)
-col1.metric("Disciplinas Cadastradas (Tabela `subjects`)", str(subj_count))
-col2.metric("Tarefas Pendentes (Tabela `academic_tasks`)", str(pending_count))
+col1.metric("Disciplinas Cadastradas", str(subj_count))
+col2.metric("Tarefas Pendentes", str(pending_count))
 
 st.markdown("---")
 
@@ -127,7 +118,7 @@ subject_map = {s.get("id"): s.get("name", f"Disciplina {s.get('id')}") for s in 
 col_left, col_right = st.columns([1, 1], gap="large")
 
 with col_left:
-    st.subheader("📊 Visão Geral de Progresso (Matérias Incompletas)")
+    render_section_header("Visão Geral de Progresso (Matérias Incompletas)", "prog_00000.png")
     st.write("Acompanhe o andamento das matérias que ainda não atingiram 100% de conclusão:")
 
     incomplete_subjects = []
@@ -151,9 +142,9 @@ with col_left:
             })
 
     if not cached_subjects:
-        st.info("Nenhuma disciplina cadastrada no momento. Acesse a página **📚 Disciplinas** para adicionar suas matérias.")
+        st.info("Nenhuma disciplina cadastrada no momento. Acesse a página **Disciplinas** para adicionar suas matérias.")
     elif not incomplete_subjects:
-        st.success("🎉 Parabéns! Todas as suas matérias cadastradas estão 100% concluídas.")
+        st.success("Parabéns! Todas as suas matérias cadastradas estão 100% concluídas.")
     else:
         for item in incomplete_subjects:
             with st.container(border=True):
@@ -164,13 +155,13 @@ with col_left:
                 prog_frac = min(max(item["percentage"] / 100.0, 0.0), 1.0)
                 st.progress(prog_frac)
                 
-                details = f"📌 {item['completed_tasks']} de {item['total_tasks']} tarefas concluídas"
+                details = f"{item['completed_tasks']} de {item['total_tasks']} tarefas concluídas"
                 if item.get("teacher"):
                     details += f" • Prof(a): {item['teacher']}"
                 st.caption(details)
 
 with col_right:
-    st.subheader("📅 Calendário de Próximas Entregas")
+    st.subheader("Calendário de Próximas Entregas")
     
     today = datetime.now().date()
     curr_year = today.year
@@ -186,14 +177,18 @@ with col_right:
     
     # Identificar tarefas com data no mês atual ou futuras
     tasks_with_dates = []
-    days_with_deadlines = set()
+    days_with_pending = set()
+    days_with_completed = set()
     
     for t in cached_tasks:
         d = parse_task_date(t.get("due_date"))
         if d:
             tasks_with_dates.append({**t, "parsed_due_date": d})
             if d.year == curr_year and d.month == curr_month:
-                days_with_deadlines.add(d.day)
+                if t.get("status") != "completed":
+                    days_with_pending.add(d.day)
+                else:
+                    days_with_completed.add(d.day)
     
     # Construir HTML do calendário
     cal_matrix = calendar.monthcalendar(curr_year, curr_month)
@@ -203,38 +198,55 @@ with col_right:
         cells_html = ""
         for day in week:
             if day == 0:
-                cells_html += '<td style="padding: 8px 4px; color: #cbd5e1;">-</td>'
+                cells_html += '<td style="padding: 8px 4px; color: #475569;">-</td>'
             else:
-                has_deadline = day in days_with_deadlines
+                has_pending = day in days_with_pending
                 is_today = (day == today.day and curr_month == today.month and curr_year == today.year)
                 
-                if has_deadline:
-                    # Destaque com círculo colorido como na imagem de referência
+                if has_pending and is_today:
+                    # Tarefa pendente em dia atual: círculo vermelho com contorno azul
+                    cells_html += (
+                        f'<td style="padding: 6px 2px; text-align: center;">'
+                        f'<span style="display: inline-block; width: 28px; height: 28px; line-height: 24px; '
+                        f'border-radius: 50%; background-color: #ff0000; border: 2px solid #2563eb; color: #ffffff; font-weight: bold; font-size: 13px;">'
+                        f'{day}</span></td>'
+                    )
+                elif has_pending:
+                    # Tarefas pendentes: círculo preenchido em vermelho #ff0000
+                    cells_html += (
+                        f'<td style="padding: 6px 2px; text-align: center;">'
+                        f'<span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; '
+                        f'border-radius: 50%; background-color: #ff0000; color: #ffffff; font-weight: bold; font-size: 13px;">'
+                        f'{day}</span></td>'
+                    )
+                elif is_today:
+                    # Dia de hoje: círculo preenchido em azul #2563eb
                     cells_html += (
                         f'<td style="padding: 6px 2px; text-align: center;">'
                         f'<span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; '
                         f'border-radius: 50%; background-color: #2563eb; color: #ffffff; font-weight: bold; font-size: 13px;">'
                         f'{day}</span></td>'
                     )
-                elif is_today:
+                elif day in days_with_completed:
+                    # Tarefas concluídas: círculo com borda verde
                     cells_html += (
                         f'<td style="padding: 6px 2px; text-align: center;">'
-                        f'<span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; '
-                        f'border-radius: 50%; border: 2px solid #2563eb; color: #2563eb; font-weight: bold; font-size: 13px;">'
+                        f'<span style="display: inline-block; width: 28px; height: 28px; line-height: 26px; '
+                        f'border-radius: 50%; border: 1px solid #10b981; color: #10b981; font-weight: bold; font-size: 13px;">'
                         f'{day}</span></td>'
                     )
                 else:
-                    cells_html += f'<td style="padding: 8px 4px; text-align: center; color: #334155; font-size: 13px;">{day}</td>'
+                    cells_html += f'<td style="padding: 8px 4px; text-align: center; color: #e2e8f0; font-size: 13px;">{day}</td>'
         rows_html += f"<tr>{cells_html}</tr>"
         
     calendar_html = f"""
-    <div style="background-color: #f8fafc; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0; margin-bottom: 18px;">
-        <div style="font-weight: 700; font-size: 16px; margin-bottom: 10px; text-align: center; color: #1e293b;">
+    <div style="background-color: #1e1e1e; border-radius: 12px; padding: 14px; border: 1px solid #333333; margin-bottom: 18px;">
+        <div style="font-weight: 700; font-size: 16px; margin-bottom: 10px; text-align: center; color: #f1f5f9;">
             {month_title}
         </div>
         <table style="width: 100%; border-collapse: collapse; text-align: center;">
             <thead>
-                <tr style="color: #64748b; font-size: 12px; font-weight: 600;">
+                <tr style="color: #94a3b8; font-size: 12px; font-weight: 600;">
                     <th style="padding: 4px;">Seg</th>
                     <th style="padding: 4px;">Ter</th>
                     <th style="padding: 4px;">Qua</th>
@@ -248,12 +260,20 @@ with col_right:
                 {rows_html}
             </tbody>
         </table>
+        <div style="display: flex; justify-content: center; gap: 16px; margin-top: 12px; font-size: 12px; color: #94a3b8;">
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #2563eb; display: inline-block;"></span> Hoje
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #ff0000; display: inline-block;"></span> Tarefas Pendentes
+            </span>
+        </div>
     </div>
     """
     st.markdown(calendar_html, unsafe_allow_html=True)
     
     # Lista em baixo de cada matéria que faz parte deste calendário
-    st.markdown("#### 📚 Matérias com Entregas Agendadas")
+    st.markdown("#### Matérias com Entregas Agendadas")
     
     # Filtrar tarefas agendadas para o mês atual ou datas próximas
     scheduled_tasks = [t for t in tasks_with_dates if (t["parsed_due_date"].year == curr_year and t["parsed_due_date"].month == curr_month) or t["parsed_due_date"] >= today]
@@ -272,23 +292,14 @@ with col_right:
             tasks_by_subject[s_name].append(st_item)
             
         for s_name, t_list in tasks_by_subject.items():
-            with st.expander(f"📖 **{s_name}** ({len(t_list)} entrega{'s' if len(t_list) > 1 else ''})", expanded=True):
+            with st.expander(f"**{s_name}** ({len(t_list)} entrega{'s' if len(t_list) > 1 else ''})", expanded=True):
                 for task in t_list:
                     d_formatted = task["parsed_due_date"].strftime("%d/%m/%Y")
                     t_status = task.get("status", "pending")
-                    status_badge = "✅ Concluída" if t_status == "completed" else ("⏳ Em Andamento" if t_status == "in_progress" else "📌 Pendente")
+                    status_badge = "Concluída" if t_status == "completed" else ("Em Andamento" if t_status == "in_progress" else "Pendente")
                     
                     st.markdown(f"- **{task.get('title', 'Sem Título')}** — *{d_formatted}* ({status_badge})")
                     if task.get("description"):
                         st.caption(f"  {task['description']}")
 
-st.markdown("---")
 
-st.subheader("🚀 Acesso Rápido")
-st.markdown("""
-Utilize a barra lateral para navegar pelo aplicativo:
-- 📚 **Disciplinas**: Cadastre matérias com professor e carga horária (sincronizado com `tables/subjects.xs`).
-- 📝 **Tarefas**: Gerencie lições, provas e entregas vinculadas a cada disciplina (sincronizado com `tables/academic_tasks.xs`).
-- 📊 **Progresso**: Acompanhe o percentual de conclusão das disciplinas e baixe o relatório de desempenho em PDF.
-- 👤 **Perfil**: Faça cadastro ou login na plataforma utilizando os endpoints de autenticação do Xano.
-""")

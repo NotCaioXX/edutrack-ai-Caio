@@ -10,6 +10,7 @@ query "academic_tasks/{academic_tasks_id}" verb=PATCH {
     text description? filters=trim
     date due_date?
     text status? filters=trim
+    decimal grade? filters=min:0|max:10
   }
 
   stack {
@@ -37,6 +38,7 @@ query "academic_tasks/{academic_tasks_id}" verb=PATCH {
         description: $input.description
         due_date   : $input.due_date
         status     : $input.status
+        grade      : $input.grade
       }
     } as $updated_task
   }
