@@ -79,11 +79,12 @@ def render_navbar():
     logo_disci = _get_logo_data_uri("disci_00000.png")
     logo_tarefa = _get_logo_data_uri("tarefa_00000.png")
     logo_prog = _get_logo_data_uri("prog_00000.png")
+    logo_linuq = _get_logo_data_uri("linuq_00000.png")
     logo_perf = _get_logo_data_uri("perfil_00000.png")
 
-    # Grid de colunas para a barra superior: Marca + 5 links de páginas
-    col_brand, col_home, col_subj, col_tasks, col_prog, col_perf = st.columns(
-        [2.6, 1.1, 1.2, 1.1, 1.2, 1.1],
+    # Grid de colunas para a barra superior: Marca + 6 links de páginas
+    col_brand, col_home, col_subj, col_tasks, col_prog, col_ai, col_perf = st.columns(
+        [2.3, 1.0, 1.1, 1.0, 1.1, 1.1, 1.0],
         vertical_alignment="center",
     )
 
@@ -152,6 +153,26 @@ def render_navbar():
             st.page_link(
                 "pages/3_📊_Progresso.py",
                 label="Progresso",
+                use_container_width=True,
+            )
+
+    with col_ai:
+        if logo_linuq:
+            st.page_link(
+                "pages/4_💬_Tutor_IA.py",
+                label=f"![Tutor IA]({logo_linuq}) Tutor IA",
+                use_container_width=True,
+            )
+        elif logo_brand:
+            st.page_link(
+                "pages/4_💬_Tutor_IA.py",
+                label=f"![Tutor IA]({logo_brand}) Tutor IA",
+                use_container_width=True,
+            )
+        else:
+            st.page_link(
+                "pages/4_💬_Tutor_IA.py",
+                label="Tutor IA",
                 use_container_width=True,
             )
 
