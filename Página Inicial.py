@@ -55,6 +55,55 @@ if "cached_tasks" not in st.session_state:
 token = st.session_state.get("auth_token")
 user = st.session_state.get("user_info")
 
+# ==============================================================================
+# FLUXO 1: USUÁRIO NÃO LOGADO (VISITANTE)
+# ==============================================================================
+if not token:
+    st.markdown(
+        """
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 16px; padding: 36px 32px; border: 1px solid #334155; margin-bottom: 28px;">
+            <h1 style="color: #f8fafc; font-size: 2.3rem; margin-top: 0; margin-bottom: 12px; font-weight: 700;">
+                Bem-vindo ao EduTrack AI
+            </h1>
+            <p style="color: #cbd5e1; font-size: 1.15rem; line-height: 1.6; max-width: 820px; margin-bottom: 24px;">
+                Sua plataforma completa de gestão acadêmica inteligente. Organize suas disciplinas, acompanhe prazos de tarefas com calendário visual, calcule médias ponderadas e conte com um tutor de inteligência artificial dedicado aos seus estudos.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    col_card1, col_card2, col_card3 = st.columns(3)
+
+    with col_card1:
+        with st.container(border=True):
+            st.markdown("### Gestão de Matérias")
+            st.write("Cadastre suas disciplinas com professor e carga horária. Tenha controle do progresso de cada matéria em tempo real.")
+
+    with col_card2:
+        with st.container(border=True):
+            st.markdown("### Prazos e Calendário")
+            st.write("Adicione atividades com datas de entrega e acompanhe o calendário dinâmico com marcadores visuais para não perder prazos.")
+
+    with col_card3:
+        with st.container(border=True):
+            st.markdown("### Tutor IA de Estudos")
+            st.write("Converse com um mentor inteligente sobre métodos como Feynman, Pomodoro e receba orientações com base nas suas notas.")
+
+    st.write("")
+    st.info("Para acessar as disciplinas, tarefas, relatórios em PDF e o Tutor IA, entre com sua conta ou crie um novo cadastro gratuito.")
+
+    col_act1, col_act2, _ = st.columns([1.6, 1.6, 3.2])
+    with col_act1:
+        st.page_link("pages/4_👤_Perfil.py", label="Entrar na Minha Conta", use_container_width=True)
+    with col_act2:
+        st.page_link("pages/4_👤_Perfil.py", label="Criar Nova Conta", use_container_width=True)
+
+    st.stop()
+
+# ==============================================================================
+# FLUXO 2: USUÁRIO LOGADO
+# ==============================================================================
 def get_auth_headers():
     return {"Authorization": f"Bearer {token}"} if token else {}
 
@@ -86,6 +135,31 @@ def sync_dashboard_metrics():
     return subjects_count, tasks_pending_count
 
 subj_count, pending_count = sync_dashboard_metrics()
+
+# Mensagem de Boas-Vindas ao usuário autenticado
+student_name = user.get("name", "Estudante") if user else "Estudante"
+st.markdown(f"### Olá, **{student_name}**!")
+st.caption("Acompanhe o resumo do seu semestre acadêmico:")
+
+# Se usuário não tem matérias nem tarefas cadastradas, exibe card de onboarding
+if subj_count == 0:
+    st.markdown(
+        """
+        <div style="background-color: #172554; border: 1px solid #1d4ed8; border-radius: 12px; padding: 22px; margin-top: 10px; margin-bottom: 24px;">
+            <h3 style="color: #93c5fd; margin-top: 0; margin-bottom: 8px;">Primeiros Passos no EduTrack AI</h3>
+            <p style="color: #e0f2fe; margin-bottom: 14px; font-size: 1.05rem;">
+                Você ainda não possui disciplinas cadastradas. Comece adicionando suas matérias do semestre para desbloquear o calendário de entregas, o acompanhamento de progresso e as análises do Tutor IA!
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    col_ob1, col_ob2, _ = st.columns([1.8, 1.8, 3.0])
+    with col_ob1:
+        st.page_link("pages/1_📚_Disciplinas.py", label="Cadastrar Primeira Matéria", use_container_width=True)
+    with col_ob2:
+        st.page_link("pages/2_📝_Tarefas.py", label="Cadastrar Primeira Tarefa", use_container_width=True)
+    st.markdown("---")
 
 # Métricas Visuais Dinâmicas
 col1, col2 = st.columns(2)

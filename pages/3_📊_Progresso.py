@@ -13,7 +13,7 @@ from scripts.calculate_progress import (
     calculate_all_progress
 )
 from scripts.generate_pdf_report import generate_performance_pdf
-from components.navbar import render_navbar, render_page_header
+from components.navbar import render_navbar, render_page_header, require_auth
 
 page_icon_path = PROJECT_ROOT / "assets" / "logos" / "prog_00000.png"
 st.set_page_config(
@@ -22,6 +22,7 @@ st.set_page_config(
     layout="wide"
 )
 render_navbar()
+require_auth()
 
 load_env()
 

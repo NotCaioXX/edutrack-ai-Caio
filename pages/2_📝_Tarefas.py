@@ -10,7 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from components.navbar import render_navbar, render_page_header
+from components.navbar import render_navbar, render_page_header, require_auth
 
 page_icon_path = PROJECT_ROOT / "assets" / "logos" / "tarefa_00000.png"
 st.set_page_config(
@@ -19,6 +19,7 @@ st.set_page_config(
     layout="wide"
 )
 render_navbar()
+require_auth()
 
 def load_env():
     """Carrega as variáveis do arquivo .env localizado na raiz do projeto como fallback."""
