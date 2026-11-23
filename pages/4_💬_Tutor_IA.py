@@ -7,7 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from components.navbar import render_navbar, render_page_header
+from components.navbar import render_navbar, render_page_header, require_auth
 from scripts.ai_tutor_service import (
     call_ai_tutor,
     get_gemini_api_key,
@@ -27,6 +27,7 @@ st.set_page_config(
 )
 
 render_navbar()
+require_auth()
 load_env()
 
 # Inicialização de variáveis de sessão

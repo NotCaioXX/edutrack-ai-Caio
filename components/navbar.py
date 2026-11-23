@@ -82,11 +82,20 @@ def render_navbar():
     logo_linuq = _get_logo_data_uri("linuq_00000.png")
     logo_perf = _get_logo_data_uri("perfil_00000.png")
 
-    # Grid de colunas para a barra superior: Marca + 6 links de páginas
-    col_brand, col_home, col_subj, col_tasks, col_prog, col_ai, col_perf = st.columns(
-        [2.3, 1.0, 1.1, 1.0, 1.1, 1.1, 1.0],
-        vertical_alignment="center",
-    )
+    is_logged_in = bool(st.session_state.get("auth_token"))
+
+    # Grid de colunas para a barra superior: Marca + links de páginas
+    if is_logged_in:
+        col_brand, col_home, col_subj, col_tasks, col_prog, col_ai, col_perf = st.columns(
+            [2.3, 1.0, 1.1, 1.0, 1.1, 1.1, 1.0],
+            vertical_alignment="center",
+        )
+    else:
+        # Quando deslogado, destaca Início e Entrar/Perfil
+        col_brand, col_home, col_perf, col_empty = st.columns(
+            [2.6, 1.2, 1.6, 3.6],
+            vertical_alignment="center",
+        )
 
     with col_brand:
         if logo_brand:
@@ -114,79 +123,81 @@ def render_navbar():
                 use_container_width=True,
             )
 
-    with col_subj:
-        if logo_disci:
-            st.page_link(
-                "pages/1_📚_Disciplinas.py",
-                label=f"![Disciplinas]({logo_disci}) Disciplinas",
-                use_container_width=True,
-            )
-        else:
-            st.page_link(
-                "pages/1_📚_Disciplinas.py",
-                label="Disciplinas",
-                use_container_width=True,
-            )
+    if is_logged_in:
+        with col_subj:
+            if logo_disci:
+                st.page_link(
+                    "pages/1_📚_Disciplinas.py",
+                    label=f"![Disciplinas]({logo_disci}) Disciplinas",
+                    use_container_width=True,
+                )
+            else:
+                st.page_link(
+                    "pages/1_📚_Disciplinas.py",
+                    label="Disciplinas",
+                    use_container_width=True,
+                )
 
-    with col_tasks:
-        if logo_tarefa:
-            st.page_link(
-                "pages/2_📝_Tarefas.py",
-                label=f"![Tarefas]({logo_tarefa}) Tarefas",
-                use_container_width=True,
-            )
-        else:
-            st.page_link(
-                "pages/2_📝_Tarefas.py",
-                label="Tarefas",
-                use_container_width=True,
-            )
+        with col_tasks:
+            if logo_tarefa:
+                st.page_link(
+                    "pages/2_📝_Tarefas.py",
+                    label=f"![Tarefas]({logo_tarefa}) Tarefas",
+                    use_container_width=True,
+                )
+            else:
+                st.page_link(
+                    "pages/2_📝_Tarefas.py",
+                    label="Tarefas",
+                    use_container_width=True,
+                )
 
-    with col_prog:
-        if logo_prog:
-            st.page_link(
-                "pages/3_📊_Progresso.py",
-                label=f"![Progresso]({logo_prog}) Progresso",
-                use_container_width=True,
-            )
-        else:
-            st.page_link(
-                "pages/3_📊_Progresso.py",
-                label="Progresso",
-                use_container_width=True,
-            )
+        with col_prog:
+            if logo_prog:
+                st.page_link(
+                    "pages/3_📊_Progresso.py",
+                    label=f"![Progresso]({logo_prog}) Progresso",
+                    use_container_width=True,
+                )
+            else:
+                st.page_link(
+                    "pages/3_📊_Progresso.py",
+                    label="Progresso",
+                    use_container_width=True,
+                )
 
-    with col_ai:
-        if logo_linuq:
-            st.page_link(
-                "pages/4_💬_Tutor_IA.py",
-                label=f"![Tutor IA]({logo_linuq}) Tutor IA",
-                use_container_width=True,
-            )
-        elif logo_brand:
-            st.page_link(
-                "pages/4_💬_Tutor_IA.py",
-                label=f"![Tutor IA]({logo_brand}) Tutor IA",
-                use_container_width=True,
-            )
-        else:
-            st.page_link(
-                "pages/4_💬_Tutor_IA.py",
-                label="Tutor IA",
-                use_container_width=True,
-            )
+        with col_ai:
+            if logo_linuq:
+                st.page_link(
+                    "pages/4_💬_Tutor_IA.py",
+                    label=f"![Tutor IA]({logo_linuq}) Tutor IA",
+                    use_container_width=True,
+                )
+            elif logo_brand:
+                st.page_link(
+                    "pages/4_💬_Tutor_IA.py",
+                    label=f"![Tutor IA]({logo_brand}) Tutor IA",
+                    use_container_width=True,
+                )
+            else:
+                st.page_link(
+                    "pages/4_💬_Tutor_IA.py",
+                    label="Tutor IA",
+                    use_container_width=True,
+                )
 
     with col_perf:
+        perf_label = "Perfil" if is_logged_in else "Entrar / Cadastrar"
         if logo_perf:
             st.page_link(
                 "pages/4_👤_Perfil.py",
-                label=f"![Perfil]({logo_perf}) Perfil",
+                label=f"![{perf_label}]({logo_perf}) {perf_label}",
                 use_container_width=True,
             )
         else:
             st.page_link(
                 "pages/4_👤_Perfil.py",
-                label="Perfil",
+                label=perf_label,
                 use_container_width=True,
             )
 
@@ -232,3 +243,24 @@ def render_section_header(title: str, logo_filename: str):
         )
     else:
         st.subheader(title)
+
+
+def require_auth() -> bool:
+    """Verifica se o usuário está autenticado. Caso contrário, exibe mensagem
+
+    de acesso restrito com botão de direcionamento para o login e interrompe
+    a execução da página chamadora.
+    """
+    token = st.session_state.get("auth_token")
+    if not token:
+        st.warning("Acesso restrito. Esta página requer que você esteja conectado à sua conta do EduTrack AI.")
+        col_btn, _ = st.columns([1.5, 3])
+        with col_btn:
+            st.page_link(
+                "pages/4_👤_Perfil.py",
+                label="Acessar Página de Perfil / Login",
+                use_container_width=True,
+            )
+        st.stop()
+        return False
+    return True
