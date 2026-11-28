@@ -176,7 +176,7 @@ def format_academic_context(user_info: Optional[Dict[str, Any]], progress_data: 
 
 def call_ai_tutor(
     messages: List[Dict[str, str]],
-    model: str = "gemini-3.5-flash",
+    model: str = "gemini-3.5-flash-lite",
     system_instruction: str = DEFAULT_SYSTEM_INSTRUCTION,
     academic_context: Optional[str] = None
 ) -> str:
@@ -195,48 +195,58 @@ def call_ai_tutor(
                 break
         return generate_simulated_tutor_response(last_user_message)
 
-    try:
-        url = GEMINI_API_URL.format(model=model) + f"?key={api_key}"
+    models_to_try = [model]
+    if model != "gemini-3.5-flash":
+        models_to_try.append("gemini-3.5-flash")
 
-        # Monta payload compatível com Gemini REST API
-        contents = []
-        for msg in messages:
-            role = "user" if msg.get("role") == "user" else "model"
-            contents.append({
-                "role": role,
-                "parts": [{"text": msg.get("content", "")}]
-            })
+    last_error = ""
 
-        # Se houver contexto acadêmico fornecido, adiciona às instruções do sistema
-        full_system_instruction = system_instruction
-        if academic_context:
-            full_system_instruction += f"\n\n{academic_context}"
+    for target_model in models_to_try:
+        try:
+            url = GEMINI_API_URL.format(model=target_model) + f"?key={api_key}"
 
-        payload: Dict[str, Any] = {
-            "contents": contents,
-            "systemInstruction": {
-                "parts": [{"text": full_system_instruction}]
-            },
-            "generationConfig": {
-                "temperature": 0.7,
-                "maxOutputTokens": 4096,
+            # Monta payload compatível com Gemini REST API
+            contents = []
+            for msg in messages:
+                role = "user" if msg.get("role") == "user" else "model"
+                contents.append({
+                    "role": role,
+                    "parts": [{"text": msg.get("content", "")}]
+                })
+
+            # Se houver contexto acadêmico fornecido, adiciona às instruções do sistema
+            full_system_instruction = system_instruction
+            if academic_context:
+                full_system_instruction += f"\n\n{academic_context}"
+
+            payload: Dict[str, Any] = {
+                "contents": contents,
+                "systemInstruction": {
+                    "parts": [{"text": full_system_instruction}]
+                },
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "maxOutputTokens": 4096,
+                }
             }
-        }
 
-        # Timeout ajustado para 45 segundos para conexões lentas ou respostas completas
-        response = requests.post(url, json=payload, timeout=45)
-        response.raise_for_status()
+            response = requests.post(url, json=payload, timeout=60)
+            response.raise_for_status()
 
-        data = response.json()
-        candidates = data.get("candidates", [])
-        if candidates and "content" in candidates[0]:
-            parts = candidates[0]["content"].get("parts", [])
-            if parts and "text" in parts[0]:
-                return parts[0]["text"].strip()
+            data = response.json()
+            candidates = data.get("candidates", [])
+            if candidates and "content" in candidates[0]:
+                parts = candidates[0]["content"].get("parts", [])
+                if parts and "text" in parts[0]:
+                    return parts[0]["text"].strip()
 
-        return "Não foi possível obter uma resposta do modelo no momento. Tente novamente."
+        except requests.exceptions.RequestException as e:
+            last_error = str(e)
+            continue
+        except Exception as e:
+            last_error = str(e)
+            continue
 
-    except requests.exceptions.RequestException as e:
-        return f"Erro de comunicação com a IA: {str(e)}. Verifique sua conexão e a chave GEMINI_API_KEY."
-    except Exception as e:
-        return f"Ocorreu um erro ao processar a resposta: {str(e)}."
+    if last_error:
+        return f"Erro de comunicação com a IA: {last_error}. Verifique sua conexão e a chave GEMINI_API_KEY."
+    return "Não foi possível obter uma resposta do modelo no momento. Tente novamente."
